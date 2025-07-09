@@ -3,512 +3,396 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maddasoft Production Hub</title>
+    <title>Madda Soft Game | Sudoku</title>
+    
+    <!-- Link ke Manifest Aplikasi -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .form-section { background-color: white; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
-        .form-label { display: block; margin-bottom: 0.25rem; font-weight: 500; color: #4b5563; font-size: 0.875rem; }
-        .form-input, .form-select, .form-textarea { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; transition: all 0.2s; }
-        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3); }
-        .other-input { margin-top: 0.5rem; }
-        .btn { padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; color: white; cursor: pointer; transition: background-color 0.2s; border: none; }
-        .btn-lg { padding: 0.75rem 1.5rem; }
-        .btn-primary { background-color: #4f46e5; } .btn-primary:hover { background-color: #4338ca; }
-        .btn-secondary { background-color: #6b7280; } .btn-secondary:hover { background-color: #4b5563; }
-        .btn-success { background-color: #10b981; } .btn-success:hover { background-color: #059669; }
-        .btn-warning { background-color: #f59e0b; } .btn-warning:hover { background-color: #d97706; }
-        .btn-danger { background-color: #ef4444; } .btn-danger:hover { background-color: #dc2626; }
-        .profile-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border-radius: 0.5rem; background-color: #f9fafb; border: 1px solid #e5e7eb; }
-        .tab-btn { background-color: #e5e7eb; color: #4b5563; }
-        .tab-btn.active { background-color: #4f46e5; color: white; }
-        
-        /* NEW ANIMATIONS */
-        @keyframes animate-gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
+            background-color: #f0f4f8;
+            background-image: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
         }
-        .animated-gradient-text {
-            background-size: 200% auto;
-            animation: animate-gradient 5s ease infinite;
-        }
-
-        @keyframes marquee {
-            0%   { transform: translateX(100%); }
-            100% { transform: translateX(-120%); }
-        }
-        .marquee-container {
-            overflow-x: hidden;
+        .sudoku-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: repeat(9, 1fr);
+            border: 3px solid #374151;
+            border-radius: 12px;
+            overflow: hidden;
             width: 100%;
+            max-width: 500px;
+            aspect-ratio: 1 / 1;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .sudoku-row {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+        }
+        .sudoku-cell {
+            width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
+            align-items: center;
+            font-size: clamp(1rem, 5vw, 1.75rem);
+            font-weight: 500;
+            border: 1px solid #e5e7eb;
+            box-sizing: border-box;
+            background-color: #ffffff;
+            color: #1f2937;
+            transition: background-color 0.3s ease;
         }
-        .marquee-text {
-            display: inline-block;
-            white-space: nowrap;
-            animation: marquee 10s linear infinite;
+        .sudoku-cell input {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            border: none;
+            background-color: transparent;
+            font-size: inherit;
+            font-weight: inherit;
+            color: inherit;
+            outline: none;
+            padding: 0;
+            caret-color: #4f46e5;
+        }
+        .sudoku-cell input:focus {
+            background-color: #eef2ff;
+        }
+        .sudoku-cell.initial-value input {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .sudoku-cell.solved-value input {
+             color: #4f46e5;
+             font-weight: 600;
+             animation: pop-in 0.4s ease-out forwards;
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0.4); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        /* Border untuk blok 3x3 */
+        .sudoku-cell:nth-child(3n) { border-right: 2px solid #9ca3af; }
+        .sudoku-cell:nth-child(9n) { border-right: none; }
+        .sudoku-grid > .sudoku-row:nth-child(3n) .sudoku-cell { border-bottom: 2px solid #9ca3af; }
+        .sudoku-grid > .sudoku-row:last-child .sudoku-cell { border-bottom: none; }
+
+        #solve-btn {
+            animation: pulse-animation 2s infinite;
+        }
+        @keyframes pulse-animation {
+            0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 p-4 sm:p-6 md:p-8">
+<body class="flex items-center justify-center min-h-screen p-4">
 
-    <div class="max-w-6xl mx-auto">
-        <header class="text-center mb-8">
-            <!-- UPDATED HEADER -->
-            <h1 class="text-4xl md:text-5xl font-black animated-gradient-text bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-pink-500 to-red-500">Maddasoft Production</h1>
-            <div class="marquee-container mt-2">
-                 <p class="marquee-text text-lg text-slate-600 font-semibold tracking-wider">Prompt Gen Pro V 2</p>
-            </div>
-        </header>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Kolom Manajemen Aset -->
-            <div class="form-section space-y-6">
-                <!-- TAB SWITCHER -->
-                <div class="flex border-b">
-                    <button id="characterTabBtn" class="tab-btn flex-1 py-2 px-4 rounded-t-lg -mb-px border border-b-0 border-transparent">Karakter</button>
-                    <button id="nonHumanTabBtn" class="tab-btn flex-1 py-2 px-4 rounded-t-lg -mb-px border border-b-0 border-transparent">Non-Human</button>
-                    <button id="locationTabBtn" class="tab-btn flex-1 py-2 px-4 rounded-t-lg border border-b-0 border-transparent">Lokasi</button>
-                </div>
-
-                <!-- TAB CONTENT: CHARACTER CREATOR (FULLY RESTORED & EXPANDED) -->
-                <div id="characterCreator">
-                    <form id="characterCreationForm">
-                        <fieldset class="space-y-4">
-                            <div><h2 id="formTitle" class="text-xl font-semibold">Buat Karakter Baru</h2></div>
-                            <div><h3 class="text-lg font-medium">1. Identitas</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2"><input type="text" id="charName" class="form-input" placeholder="Nama Karakter (Wajib)"><select id="charGender" class="form-select"><option value="pria">Pria</option><option value="wanita">Wanita</option></select><input type="number" id="charAge" class="form-input" placeholder="Usia"><div data-dependency-container>
-                                <select id="charOrigin" class="form-select feature-select">
-                                    <option value="">-- Pilih Etnisitas --</option><option value="Asia Tenggara (Indonesia, Melayu)">Asia Tenggara</option><option value="Asia Timur (Cina, Jepang, Korea)">Asia Timur</option><option value="Asia Selatan (India, Pakistan)">Asia Selatan</option><option value="Kaukasia / Eropa Utara">Kaukasia / Eropa Utara</option><option value="Mediterania (Italia, Yunani)">Mediterania</option><option value="Slavia / Eropa Timur">Slavia / Eropa Timur</option><option value="Timur Tengah / Arab">Timur Tengah / Arab</option><option value="Afrika Sub-Sahara">Afrika Sub-Sahara</option><option value="Afrika Utara">Afrika Utara</option><option value="Hispanik / Latin">Hispanik / Latin</option><option value="Pribumi Amerika">Pribumi Amerika</option><option value="Kepulauan Pasifik">Kepulauan Pasifik</option><option value="Yahudi Ashkenazi">Yahudi Ashkenazi</option><option value="Persia">Persia</option><option value="Peranakan (Campuran)">Peranakan (Campuran)</option><option value="other">Lainnya...</option>
-                                </select><input type="text" id="charOriginOther" class="form-input other-input hidden" placeholder="Etnisitas kustom"></div></div></div>
-                            <div><h3 class="text-lg font-medium">2. Fisik</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 mt-2">
-                                <div data-dependency-container><label class="form-label">Kulit</label><select id="charSkin" class="form-select feature-select"><option value="">-- Tekstur --</option><option value="mulus dan bersih">Mulus & Bersih</option><option value="pucat">Pucat</option><option value="sawo matang">Sawo Matang</option><option value="gelap">Gelap</option><option value="berminyak">Berminyak</option><option value="kering">Kering</option><option value="dengan pori-pori terlihat">Pori-pori Terlihat</option><option value="dengan sedikit bintik (freckles)">Sedikit Bintik</option><option value="dengan bekas luka tipis">Bekas Luka Tipis</option><option value="agak kasar">Agak Kasar</option><option value="dengan kerutan halus">Kerutan Halus</option><option value="bersih tapi lelah">Bersih Tapi Lelah</option><option value="terawat baik">Terawat Baik</option><option value="kusam">Kusam</option><option value="bercahaya (glowing)">Bercahaya</option><option value="other">Lainnya...</option></select><input type="text" id="charSkinOther" class="form-input other-input hidden"></div>
-                                <div data-dependency-container><label class="form-label">Tubuh</label><select id="charBody" class="form-select feature-select"><option value="">-- Bentuk --</option><option value="atletis dan proporsional">Atletis</option><option value="kurus dan tinggi (ectomorph)">Kurus & Tinggi</option><option value="berisi dan gempal (endomorph)">Berisi & Gempal</option><option value="sangat berotot (mesomorph)">Sangat Berotot</option><option value="ramping dan lentur">Ramping & Lentur</option><option value="pendek dan kokoh">Pendek & Kokoh</option><option value="sedikit bungkuk">Sedikit Bungkuk</option><option value="postur tegap">Postur Tegap</option><option value="rata-rata">Rata-rata</option><option value="agak gemuk">Agak Gemuk</option><option value="sangat kurus">Sangat Kurus</option><option value="berlekuk (curvy)">Berlekuk</option><option value="lebar di bahu">Lebar di Bahu</option><option value="kecil dan mungil">Kecil & Mungil</option><option value="besar dan tinggi">Besar & Tinggi</option><option value="other">Lainnya...</option></select><input type="text" id="charBodyOther" class="form-input other-input hidden"></div>
-                                <div data-dependency-container><label class="form-label">Wajah</label><select id="charFaceShape" class="form-select feature-select"><option value="">-- Bentuk --</option><option value="oval">Oval</option><option value="bulat dengan pipi tembem">Bulat</option><option value="persegi dengan rahang tegas">Persegi & Tegas</option><option value="berbentuk hati dengan dagu runcing">Bentuk Hati</option><option value="panjang dan tirus">Panjang & Tirus</option><option value="berlian dengan tulang pipi tinggi">Berlian</option><option value="segitiga">Segitiga</option><option value="wajah lelah dengan kantung mata">Lelah</option><option value="simetris">Simetris</option><option value="wajah ramah">Ramah</option><option value="wajah keras">Keras</option><option value="berlesung pipi">Berlesung Pipi</option><option value="wajah sempit">Sempit</option><option value="wajah lebar">Lebar</option><option value="berdagu belah">Dagu Belah</option><option value="other">Lainnya...</option></select><input type="text" id="charFaceShapeOther" class="form-input other-input hidden"></div>
-                                <div data-dependency-container><label class="form-label">Alis</label><select id="charEyebrows" class="form-select feature-select"><option value="">-- Bentuk --</option><option value="tebal dan lurus">Tebal & Lurus</option><option value="tipis dan melengkung tajam">Tipis & Melengkung</option><option value="alami dan sedikit berantakan">Alami</option><option value="lurus dan rata">Lurus & Rata</option><option value="rapi dan terpelihara">Rapi</option><option value="berkerut di tengah">Berkerut</option><option value="hampir tidak terlihat">Hampir Tak Terlihat</option><option value="melengkung lembut">Lengkung Lembut</option><option value="lebat">Lebat</option><option value="berwarna gelap">Warna Gelap</option><option value="berwarna terang">Warna Terang</option><option value="bercabang di ujung">Bercabang</option><option value="menukik tajam">Menukik Tajam</option><option value="simetris">Simetris</option><option value="menyatu tipis (unibrow)">Menyatu Tipis</option><option value="other">Lainnya...</option></select><input type="text" id="charEyebrowsOther" class="form-input other-input hidden"></div>
-                                <div data-dependency-container><label class="form-label">Mata</label><select id="charEyes" class="form-select feature-select"><option value="">-- Warna & Bentuk --</option><option value="cokelat tua yang tajam">Cokelat Tua Tajam</option><option value="hitam pekat dan bulat">Hitam Bulat</option><option value="biru jernih">Biru Jernih</option><option value="hijau zamrud">Hijau Zamrud</option><option value="abu-abu seperti baja">Abu-abu Baja</option><option value="sipit (almond)">Sipit (Almond)</option><option value="sayu dan lelah">Sayu & Lelah</option><option value="berbinar dan ceria">Berbinar & Ceria</option><option value="dengan tatapan dingin">Tatapan Dingin</option><option value="dengan bulu mata lentik">Bulu Mata Lentik</option><option value="agak juling (cross-eyed)">Agak Juling</option><option value="memiliki kantung mata">Kantung Mata</option><option value="satu mata berbeda warna (heterochromia)">Heterochromia</option><option value="dalam dan menusuk">Dalam & Menusuk</option><option value="terbuka lebar dan polos">Terbuka Lebar</option><option value="other">Lainnya...</option></select><input type="text" id="charEyesOther" class="form-input other-input hidden"></div>
-                                <div data-dependency-container><label class="form-label">Rambut</label><select id="charHair" class="form-select feature-select"></select><input type="text" id="charHairOther" class="form-input other-input hidden"></div>
-                                <div id="facialHairContainer" data-dependency-container><label class="form-label">Rambut Wajah</label><select id="charFacialHair" class="form-select feature-select"><option value="">-- Pilihan --</option><option value="dicukur bersih">Bersih</option><option value="jenggot tipis (stubble)">Stubble</option><option value="kumis tebal">Kumis Tebal</option><option value="jenggot penuh dan rapi">Jenggot Penuh</option><option value="cambang (sideburns)">Cambang</option><option value="goatee">Goatee</option><option value="tidak terawat">Tidak Terawat</option><option value="other">Lainnya...</option></select><input type="text" id="charFacialHairOther" class="form-input other-input hidden"></div>
-                                <div class="sm:col-span-2"><label class="form-label">Tato</label><div class="grid grid-cols-2 gap-2"><input type="text" id="charTattooDesc" class="form-input" placeholder="Deskripsi..."><input type="text" id="charTattooLoc" class="form-input" placeholder="...di lokasi ini."></div></div></div></div>
-                            <div><h3 class="text-lg font-medium">3. Suara</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2"><div data-dependency-container><label class="form-label">Ciri Suara</label><select id="charVoice" class="form-select feature-select"><option value="">-- Pilihan --</option><option value="dalam dan berat (deep)">Dalam & Berat</option><option value="bernada tinggi (high-pitched)">Bernada Tinggi</option><option value="lembut dan pelan">Lembut & Pelan</option><option value="serak (raspy)">Serak</option><option value="jelas dan tegas">Jelas & Tegas</option><option value="sengau (nasal)">Sengau</option><option value="merdu (melodious)">Merdu</option><option value="parau (hoarse)">Parau</option><option value="berwibawa">Berwibawa</option><option value="gugup dan terbata-bata">Gugup</option><option value="monoton">Monoton</option><option value="bersemangat">Bersemangat</option><option value="berbisik">Berbisik</option><option value="menggelegar (booming)">Menggelegar</option><option value="cempreng (shrill)">Cempreng</option><option value="other">Lainnya...</option></select><input type="text" id="charVoiceOther" class="form-input other-input hidden"></div><div data-dependency-container><label class="form-label">Aksen</label><select id="charAccent" class="form-select feature-select"><option value="">-- Pilihan --</option><option value="netral / standar">Netral / Standar</option><option value="British (RP)">British (RP)</option><option value="American (General)">American (General)</option><option value="American (Southern)">American (Southern)</option><option value="Jawa Medok">Jawa</option><option value="Sunda">Sunda</option><option value="Batak">Batak</option><option value="Melayu">Melayu</option><option value="Betawi">Betawi</option><option value="Australia">Australia</option><option value="Rusia">Rusia</option><option value="Prancis">Prancis</option><option value="Italia">Italia</option><option value="Jepang">Jepang</option><option value="India">India</option><option value="other">Lainnya...</option></select><input type="text" id="charAccentOther" class="form-input other-input hidden"></div></div></div>
-                            <div><h3 class="text-lg font-medium">4. Perilaku</h3><textarea id="charCoreBehavior" class="form-textarea mt-2" rows="3" placeholder="Kepribadian, postur, ekspresi, kebiasaan khas..."></textarea></div>
-                            <div><h3 class="text-lg font-medium">5. Pakaian</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 mt-2"><div class="sm:col-span-2" data-dependency-container><label class="form-label">Gaya</label><select id="gayaKeseluruhan" class="form-select feature-select"><option value="">-- Pilihan --</option><option value="kasual modern">Kasual Modern</option><option value="formal bisnis">Formal Bisnis</option><option value="streetwear">Streetwear</option><option value="vintage">Vintage</option><option value="bohemian">Bohemian</option><option value="gothic">Gothic</option><option value="preppy">Preppy</option><option value="sporty">Sporty</option><option value="petualang (adventure-core)">Petualang</option><option value="minimalis">Minimalis</option><option value="elegan">Elegan</option><option value="punk">Punk</option><option value="futuristik">Futuristik</option><option value="tradisional">Tradisional</option><option value="acak-acakan (sloppy)">Acak-acakan</option><option value="other">Lainnya...</option></select><input type="text" id="gayaKeseluruhanOther" class="form-input other-input hidden"></div><div data-dependency-container><label class="form-label">Atasan</label><select id="pakaianAtasan" class="form-select feature-select"><option value="">-- Pilihan --</option><option value="kaos katun">Kaos Katun</option><option value="kemeja flanel">Kemeja Flanel</option><option value="hoodie fleece">Hoodie Fleece</option><option value="jaket kulit">Jaket Kulit</option><option value="blazer wol">Blazer Wol</option><option value="tank top">Tank Top</option><option value="sweater rajut">Sweater Rajut</option><option value="polo shirt">Polo Shirt</option><option value="kemeja sutra">Kemeja Sutra</option><option value="jaket denim">Jaket Denim</option><option value="rompi">Rompi</option><option value="blus sifon (wanita)">Blus Sifon</option><option value="turtleneck">Turtleneck</option><option value="crop top (wanita)">Crop Top</option><option value="long coat">Long Coat</option><option value="other">Lainnya...</option></select><input type="text" id="pakaianAtasanOther" class="form-input other-input hidden"></div><div data-dependency-container><label class="form-label">Bawahan</label><select id="pakaianBawahan" class="form-select feature-select"><option value="">-- Pilihan --</option><option value="celana jeans denim">Celana Jeans</option><option value="celana kargo kanvas">Celana Kargo</option><option value="celana bahan katun">Celana Bahan</option><option value="celana pendek">Celana Pendek</option><option value="rok mini kulit">Rok Mini Kulit</option><option value="rok panjang katun">Rok Panjang</option><option value="legging">Legging</option><option value="celana jogger">Celana Jogger</option><option value="celana chino">Celana Chino</option><option value="celana kulit">Celana Kulit</option><option value="overall denim">Overall</option><option value="celana formal">Celana Formal</option><option value="sarung">Sarung</option><option value="celana training">Celana Training</option><option value="skort (rok-celana)">Skort</option><option value="other">Lainnya...</option></select><input type="text" id="pakaianBawahanOther" class="form-input other-input hidden"></div><div class="sm:col-span-2" data-dependency-container><label class="form-label">Aksesori</label><select id="aksesori" class="form-select feature-select"><option value="">-- Pilihan --</option><option value="kacamata hitam">Kacamata Hitam</option><option value="jam tangan digital">Jam Tangan Digital</option><option value="jam tangan analog kulit">Jam Tangan Analog</option><option value="kalung rantai perak">Kalung Rantai Perak</option><option value="topi baseball">Topi Baseball</option><option value="topi beanie">Topi Beanie</option><option value="syal rajut">Syal Rajut</option><option value="anting perak">Anting Perak</option><option value="cincin batu akik">Cincin Batu Akik</option><option value="gelang kulit">Gelang Kulit</option><option value="ransel kanvas">Ransel Kanvas</option><option value="headphone di leher">Headphone</option><option value="dasi">Dasi</option><option value="ikat pinggang kulit">Ikat Pinggang</option><option value="piercing hidung">Piercing Hidung</option><option value="other">Lainnya...</option></select><input type="text" id="aksesoriOther" class="form-input other-input hidden"></div></div></div>
-                            <div class="pt-2"><button type="submit" id="formSubmitBtn" class="btn btn-lg btn-primary w-full">Simpan Karakter Baru</button><button type="button" id="cancelEditBtn" class="btn btn-lg btn-secondary hidden mt-2 w-full">Batal Edit</button></div>
-                        </fieldset>
-                    </form>
-                    <div class="pt-6 border-t mt-6"><h2 class="text-xl font-semibold mb-4">Karakter Tersimpan</h2><div id="characterList" class="space-y-2"><p id="noProfilesMessage" class="text-slate-500">Belum ada karakter.</p></div></div>
-                </div>
-
-                <!-- TAB CONTENT: NON-HUMAN CREATOR -->
-                <div id="nonHumanCreator" class="hidden">
-                     <form id="nonHumanCreationForm">
-                        <fieldset class="space-y-4">
-                            <div><h2 id="nhFormTitle" class="text-xl font-semibold">Buat Karakter Non-Human Baru</h2></div>
-                            <input type="text" id="nhName" class="form-input" placeholder="Nama/Jenis Makhluk (Wajib)">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                               <div data-dependency-container><label class="form-label">Tipe Makhluk</label><select id="nhType" class="form-select feature-select"><option value="">-- Pilih Tipe --</option><option value="Humanoid">Humanoid</option><option value="Hewan Fantasi">Hewan Fantasi</option><option value="Robot/Android">Robot/Android</option><option value="Monster/Aberasi">Monster</option><option value="Alien">Alien</option><option value="Roh/Hantu">Roh/Hantu</option><option value="Makhluk Mitologi">Mitologi</option><option value="other">Lainnya...</option></select><input type="text" id="nhTypeOther" class="form-input other-input hidden"></div>
-                               <div data-dependency-container><label class="form-label">Ukuran</label><select id="nhSize" class="form-select feature-select"><option value="">-- Pilih Ukuran --</option><option value="Kecil">Kecil (kucing)</option><option value="Sedang">Sedang (manusia)</option><option value="Besar">Besar (mobil)</option><option value="Raksasa">Raksasa (bangunan)</option><option value="other">Lainnya...</option></select><input type="text" id="nhSizeOther" class="form-input other-input hidden"></div>
-                            </div>
-                            <div><label class="form-label">Ciri Fisik Khas</label><textarea id="nhFeatures" class="form-textarea" rows="3" placeholder="Contoh: Kulit bersisik hijau, mata menyala merah, empat lengan..."></textarea></div>
-                            <div><label class="form-label">Kemampuan/Kekuatan</label><textarea id="nhAbilities" class="form-textarea" rows="2" placeholder="Contoh: Bisa terbang, menyemburkan api, telepati..."></textarea></div>
-                            <div><label class="form-label">Sifat & Perilaku</label><select id="nhBehavior" class="form-select"><option value="">-- Pilih Sifat --</option><option value="Buas dan teritorial">Buas & Teritorial</option><option value="Cerdas dan ingin tahu">Cerdas & Ingin Tahu</option><option value="Setia dan protektif">Setia & Protektif</option><option value="Kacau dan tak terduga">Kacau & Tak Terduga</option><option value="Bijaksana dan kuno">Bijaksana & Kuno</option></select></div>
-                             <div class="pt-2"><button type="submit" id="nhFormSubmitBtn" class="btn btn-lg btn-primary w-full">Simpan Karakter Non-Human</button></div>
-                        </fieldset>
-                    </form>
-                    <div class="pt-6 border-t mt-6"><h2 class="text-xl font-semibold mb-4">Non-Human Tersimpan</h2><div id="nonHumanList" class="space-y-2"><p id="noNonHumansMessage" class="text-slate-500">Belum ada karakter non-human.</p></div></div>
-                </div>
-
-                <!-- TAB CONTENT: LOCATION CREATOR -->
-                <div id="locationCreator" class="hidden">
-                    <form id="locationCreationForm">
-                        <fieldset class="space-y-4">
-                             <div><h2 class="text-xl font-semibold">Buat Lokasi Baru</h2></div>
-                             <input type="text" id="locName" class="form-input" placeholder="Nama Lokasi (Wajib)">
-                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div data-dependency-container><label class="form-label">Jenis Lokasi</label><select id="locType" class="form-select feature-select"><option value="">-- Pilih Jenis --</option><option value="Kafe Modern">Kafe Modern</option><option value="Perpustakaan Tua">Perpustakaan Tua</option><option value="Apartemen Mewah">Apartemen Mewah</option><option value="Pasar Malam Ramai">Pasar Malam Ramai</option><option value="Hutan Belantara">Hutan Belantara</option><option value="Pantai Tropis">Pantai Tropis</option><option value="Stasiun Kereta Bawah Tanah">Stasiun Kereta</option><option value="Laboratorium Futuristik">Laboratorium</option><option value="Kastil Abad Pertengahan">Kastil</option><option value="Rooftop Bar Perkotaan">Rooftop Bar</option><option value="Gudang Terbengkalai">Gudang</option><option value="Ruang Tahta Kerajaan">Ruang Tahta</option><option value="Planet Asing">Planet Asing</option><option value="Dek Kapal Luar Angkasa">Kapal Luar Angkasa</option><option value="Kamar Hotel Murah">Kamar Hotel</option><option value="other">Lainnya...</option></select><input type="text" id="locTypeOther" class="form-input other-input hidden"></div>
-                                <div data-dependency-container><label class="form-label">Era / Waktu</label><select id="locEra" class="form-select feature-select"><option value="">-- Pilih Era --</option><option value="Masa Kini - Siang Hari">Masa Kini - Siang</option><option value="Masa Kini - Malam Hari">Masa Kini - Malam</option><option value="Masa Kini - Senja">Masa Kini - Senja</option><option value="Futuristik (Cyberpunk)">Futuristik</option><option value="Pasca-Apokaliptik">Pasca-Apokaliptik</option><option value="Abad Pertengahan">Abad Pertengahan</option><option value="Era Victoria">Era Victoria</option><option value="Wild West">Wild West</option><option value="Tahun 1980-an">1980-an</option><option value="Tahun 1990-an">1990-an</option><option value="Zaman Batu">Zaman Batu</option><option value="Mesir Kuno">Mesir Kuno</option><option value="Kerajaan Romawi">Romawi</option><option value="Steampunk">Steampunk</option><option value="other">Lainnya...</option></select><input type="text" id="locEraOther" class="form-input other-input hidden"></div>
-                                <div data-dependency-container class="sm:col-span-2"><label class="form-label">Atmosfer</label><select id="locAtmosphere" class="form-select feature-select"><option value="">-- Pilih Atmosfer --</option><option value="Hangat dan Nyaman">Hangat & Nyaman</option><option value="Misterius dan Gelap">Misterius & Gelap</option><option value="Tegang dan Mencekam">Tegang & Mencekam</option><option value="Cerah dan Ceria">Cerah & Ceria</option><option value="Megah dan Agung">Megah & Agung</option><option value="Melankolis dan Sepi">Melankolis & Sepi</option><option value="Kacau dan Ramai">Kacau & Ramai</option><option value="Ajaib dan Magis">Ajaib & Magis</option><option value="Tenang dan Damai">Tenang & Damai</option><option value="Industri dan Kotor">Industri & Kotor</option><option value="Mewah dan Elegan">Mewah & Elegan</option><option value="Menyeramkan (Eerie)">Menyeramkan</option><option value="Nostalgia dan Retro">Nostalgia & Retro</option><option value="Sureal dan Aneh">Sureal & Aneh</option><option value="Rusak dan Terbengkalai">Rusak & Terbengkalai</option><option value="other">Lainnya...</option></select><input type="text" id="locAtmosphereOther" class="form-input other-input hidden"></div>
-                             </div>
-                             <div><label class="form-label">Elemen Kunci Konsisten (Pisahkan dengan koma)</label><textarea id="locElements" class="form-textarea" rows="3" placeholder="Contoh: sofa kulit merah, jendela besar"></textarea></div>
-                             <div class="pt-2"><button type="submit" class="btn btn-lg btn-primary w-full">Simpan Lokasi Baru</button></div>
-                        </fieldset>
-                    </form>
-                    <div class="pt-6 border-t mt-6"><h2 class="text-xl font-semibold mb-4">Lokasi Tersimpan</h2><div id="locationList" class="space-y-2"><p id="noLocationsMessage" class="text-slate-500">Belum ada lokasi.</p></div></div>
-                </div>
-            </div>
+    <main class="w-full max-w-4xl bg-white/70 backdrop-blur-xl p-4 sm:p-6 rounded-2xl shadow-2xl shadow-blue-100/50 border border-white/50">
+        <div class="flex flex-col lg:flex-row gap-6 lg:gap-8">
             
-            <div class="space-y-6">
-                <!-- TAHAP 2: GENERATOR ADEGAN -->
-                <div class="form-section space-y-4">
-                     <h2 class="text-xl font-semibold">Generator Adegan</h2>
-                     
-                     <!-- MULTI-ACTOR SELECTOR -->
-                     <div>
-                        <label class="form-label">1. Pilih Aktor</label>
-                        <div id="actorSelectorContainer" class="space-y-2">
-                            <div class="flex items-center space-x-2 actor-row">
-                                <select class="form-select actor-select"><option value="">-- Aktor 1 --</option></select>
-                            </div>
-                        </div>
-                        <button type="button" id="addActorBtn" class="btn btn-secondary mt-2 text-sm">+ Tambah Aktor</button>
-                     </div>
-                     
-                     <div><label for="sceneLocationSelect" class="form-label">2. Pilih Lokasi</label><select id="sceneLocationSelect" class="form-select"><option value="">-- Lokasi --</option></select></div>
-                     
-                     <div class="pt-2">
-                         <h3 class="text-lg font-medium">3. Sinematografi & Gaya</h3>
-                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-                             <div><label for="sceneStyle" class="form-label">Gaya Visual</label><select id="sceneStyle" class="form-select"><option value="photorealistic, 8k, cinematic">Fotorealistik</option><option value="3d animation, pixar style">Animasi 3D</option><option value="2d cartoon, anime style">Kartun 2D</option><option value="noir film style, black and white">Film Noir</option><option value="vaporwave aesthetic, neon glow">Vaporwave / Retro</option><option value="documentary style, natural lighting">Gaya Dokumenter</option><option value="epic fantasy film, vibrant colors">Fantasi Epik</option></select></div>
-                             <div><label for="cameraMovement" class="form-label">Gerakan Kamera</label><select id="cameraMovement" class="form-select"><option value="static shot">Static (Diam)</option><option value="panning shot">Panning (Menoleh)</option><option value="tilting shot">Tilting (Mendongak)</option><option value="tracking shot">Tracking (Mengikuti)</option><option value="dolly in">Dolly In (Maju)</option><option value="crane shot">Crane Shot (Naik/Turun)</option><option value="handheld camera">Handheld (Genggam)</option></select></div>
-                         </div>
-                     </div>
-                     <div><label for="sceneAction" class="form-label">4. Deskripsi Adegan (Dialog tidak akan diterjemahkan)</label><textarea id="sceneAction" class="form-textarea" rows="4" placeholder="Contoh: Arka tersenyum pada Naga Api dan berkata, 'Akhirnya kita bertemu.'"></textarea></div>
-                     <button id="generateSceneBtn" class="btn btn-lg btn-success w-full">Buat Prompt Adegan</button>
+            <!-- Panel Kiri: Papan Sudoku -->
+            <div class="flex-shrink-0 w-full lg:w-1/2 flex items-center justify-center">
+                <div id="sudoku-container" class="sudoku-grid"></div>
+            </div>
+
+            <!-- Panel Kanan: Kontrol -->
+            <div class="flex-grow flex flex-col justify-center text-center lg:text-left">
+                <div>
+                    <h1 class="text-4xl lg:text-5xl font-bold text-gray-800 tracking-tight">Madda Soft Game</h1>
+                    <p class="text-gray-600 mt-2 text-2xl font-medium">Sudoku Game</p>
+                </div>
+                
+                <div class="flex flex-col gap-3 mt-8">
+                    <button id="solve-btn" class="flex items-center justify-center gap-2 w-full bg-indigo-600 text-white font-bold py-3.5 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18m-6-6h12M5 12a7 7 0 0 1 7-7 7 7 0 0 1 7 7m-7 7a7 7 0 0 0 7-7 7 7 0 0 0-7-7"/></svg>
+                        <span>Selesaikan</span>
+                    </button>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                         <button id="clear-btn" class="flex items-center justify-center gap-2 w-full bg-gray-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            <span>Bersihkan</span>
+                        </button>
+                        <button id="example-btn" class="flex items-center justify-center gap-2 w-full bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-200 transition-all duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 14a4 4 0 1 1 4-4 4 4 0 0 1-4 4z"/></svg>
+                            <span>Contoh Baru</span>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="form-section space-y-4">
-                    <div>
-                        <h3 class="text-lg font-medium mb-2">Hasil Prompt (Bahasa Indonesia)</h3>
-                        <textarea id="outputPromptId" class="form-textarea w-full bg-slate-50 text-sm" readonly rows="8" placeholder="Hasil..."></textarea>
-                        <button id="copyBtnId" class="btn btn-secondary mt-2">Salin</button>
-                    </div>
-                    <div class="pt-4 border-t">
-                        <h3 class="text-lg font-medium mb-2">Hasil Prompt (Bahasa Inggris)</h3>
-                        <textarea id="outputPromptEn" class="form-textarea w-full bg-slate-50 text-sm" readonly rows="8" placeholder="Result..."></textarea>
-                        <button id="copyBtnEn" class="btn btn-secondary mt-2">Copy</button>
-                    </div>
-                </div>
+                <div id="message-box" class="mt-6 text-center h-6 text-indigo-600 font-semibold"></div>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const elements = {
-                charTabBtn: document.getElementById('characterTabBtn'), locTabBtn: document.getElementById('locationTabBtn'), nonHumanTabBtn: document.getElementById('nonHumanTabBtn'),
-                charCreatorDiv: document.getElementById('characterCreator'), locCreatorDiv: document.getElementById('locationCreator'), nonHumanCreatorDiv: document.getElementById('nonHumanCreator'),
-                charForm: document.getElementById('characterCreationForm'), locForm: document.getElementById('locationCreationForm'), nonHumanForm: document.getElementById('nonHumanCreationForm'),
-                charFormTitle: document.getElementById('formTitle'), nhFormTitle: document.getElementById('nhFormTitle'),
-                charSubmitBtn: document.getElementById('formSubmitBtn'), nhSubmitBtn: document.getElementById('nhFormSubmitBtn'),
-                cancelEditBtn: document.getElementById('cancelEditBtn'),
-                charListDiv: document.getElementById('characterList'), locListDiv: document.getElementById('locationList'), nonHumanListDiv: document.getElementById('nonHumanList'),
-                noProfilesMsg: document.getElementById('noProfilesMessage'), noLocationsMsg: document.getElementById('noLocationsMessage'), noNonHumansMsg: document.getElementById('noNonHumansMessage'),
-                sceneCharSelect: document.getElementById('sceneCharacterSelect'), sceneLocSelect: document.getElementById('sceneLocationSelect'),
-                generateSceneBtn: document.getElementById('generateSceneBtn'), outputId: document.getElementById('outputPromptId'),
-                outputEn: document.getElementById('outputPromptEn'), copyBtnId: document.getElementById('copyBtnId'), copyBtnEn: document.getElementById('copyBtnEn'),
-                actorSelectorContainer: document.getElementById('actorSelectorContainer'), addActorBtn: document.getElementById('addActorBtn'),
-            };
+        const container = document.getElementById('sudoku-container');
+        const solveBtn = document.getElementById('solve-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const exampleBtn = document.getElementById('example-btn');
+        const messageBox = document.getElementById('message-box');
+        const cells = [];
 
-            let characters = [], locations = [], nonHumans = [];
-            let editingCharacterId = null;
-            const CHAR_KEY = 'veo3_hub_chars_v24_full';
-            const LOC_KEY = 'veo3_hub_locs_v24_full';
-            const NH_KEY = 'veo3_hub_nh_v24_full';
-            
-            function getVal(id) { const el = document.getElementById(id); if (!el) return ''; return el.classList.contains('feature-select') ? (el.value === 'other' ? document.getElementById(id + 'Other').value.trim() : el.value.trim()) : el.value.trim(); }
-            
-            function getCharacterData(useDefaults = false) {
-                const gender = getVal('charGender');
-                const defaults = { pria: { charHair: 'pendek rapi', charFacialHair: 'dicukur bersih' }, wanita: { charHair: 'panjang lurus' }, charAge: '28', charOrigin: 'Asia Tenggara', charSkin: 'mulus', charBody: 'proporsional', charFaceShape: 'oval', charEyebrows: 'alami', charEyes: 'cokelat', charVoice: 'jelas', charAccent: 'netral', gayaKeseluruhan: 'kasual', pakaianAtasan: 'kaos', pakaianBawahan: 'jeans', aksesori: 'tidak ada' };
-                const get = (id) => { const val = getVal(id); return useDefaults ? (val || (defaults[gender] && defaults[id]) || defaults[id] || '') : val; };
-                let data = {};
-                ['charName', 'charGender', 'charAge', 'charOrigin', 'charSkin', 'charBody', 'charFaceShape', 'charEyebrows', 'charEyes', 'charHair', 'charFacialHair', 'charTattooDesc', 'charTattooLoc', 'charVoice', 'charAccent', 'charCoreBehavior', 'gayaKeseluruhan', 'pakaianAtasan', 'pakaianBawahan', 'aksesori'].forEach(id => { data[id] = get(id); });
-                return data;
-            }
-
-            function getNonHumanData() {
-                let data = {};
-                ['nhName', 'nhType', 'nhSize', 'nhFeatures', 'nhAbilities', 'nhBehavior'].forEach(id => { data[id] = getVal(id); });
-                return data;
-            }
-
-            function getLocationData() {
-                let data = {};
-                ['locName', 'locType', 'locEra', 'locAtmosphere', 'locElements'].forEach(id => { data[id] = getVal(id); });
-                return data;
-            }
-
-            function generateBlueprintStrings(data, lang) {
-                const T = { id: { p: 'Cetak biru fisik', v: 'Cetak biru suara', b: 'Cetak biru perilaku', c: 'Pakaian khas', s: 'Adegan', m: 'seorang pria', f: 'seorang wanita', age: `berusia ${data.charAge} tahun`, name: data.charName ? `bernama ${data.charName}` : '', o: `keturunan ${data.charOrigin}`, sk: `kulit ${data.charSkin}`, bd: `tubuh ${data.charBody}`, fc: `wajah ${data.charFaceShape}`, eb: `alis ${data.charEyebrows}`, ey: `mata ${data.charEyes}`, hr: `rambut ${data.charHair}`, fh: `dan ${data.charFacialHair}`, tt: `memiliki tato ${data.charTattooDesc} di ${data.charTattooLoc || 'tubuhnya'}`, vd: `memiliki suara ${data.charVoice} dengan aksen ${data.charAccent}`, cs: `bergaya ${data.gayaKeseluruhan}`, ci: `mengenakan ${data.pakaianAtasan} dan ${data.pakaianBawahan}`, ac: `dilengkapi ${data.aksesori}`}, en: { p: 'Physical blueprint', v: 'Voice blueprint', b: 'Behavioral blueprint', c: 'Signature outfit', s: 'Scene', m: 'a man', f: 'a woman', age: `${data.charAge} years old`, name: data.charName ? `named ${data.charName}` : '', o: `of ${data.charOrigin} descent`, sk: `${data.charSkin} skin`, bd: `an ${data.charBody} build`, fc: `an ${data.charFaceShape} face`, eb: `${data.charEyebrows} eyebrows`, ey: `${data.charEyes} eyes`, hr: `${data.charHair} hair`, fh: `and is ${data.charFacialHair}`, tt: `with a tattoo of ${data.charTattooDesc} on his/her ${data.charTattooLoc || 'body'}`, vd: `with a ${data.charVoice} voice and a ${data.charAccent} accent`, cs: `${data.gayaKeseluruhan} style`, ci: `wearing a ${data.pakaianAtasan} and ${data.pakaianBawahan}`, ac: `accessorized with ${data.aksesori}`} }[lang];
-                const basicTraits = [data.charGender === 'pria' ? T.m : T.f, T.age, T.name].filter(Boolean).join(', ');
-                let physicalDetails = [T.o, T.sk, T.bd, T.fc, T.eb, T.ey, T.hr];
-                if (data.charGender === 'pria') physicalDetails.push(T.fh);
-                if (data.charTattooDesc) physicalDetails.push(T.tt);
-                const clothing = `${T.cs}, ${T.ci}`;
-                return { type: 'human', name: data.charName, physical: `${T.p}: ${basicTraits}, ${physicalDetails.join(', ')}.`, voice: `${T.v}: ${T.vd}.`, behavior: data.charCoreBehavior ? `${T.b}: ${data.charCoreBehavior}.` : '', clothing: `${T.c}: ${clothing}${data.aksesori && data.aksesori !== 'tidak ada' ? `, ${T.ac}.` : '.'}`, scenePrefix: T.s };
-            }
-            
-            function generateNonHumanBlueprint(data, lang) {
-                const T = { id: { p: 'Cetak biru makhluk', n: data.nhName, t: data.nhType, sz: data.nhSize, ft: data.nhFeatures, ab: data.nhAbilities, bh: data.nhBehavior }, en: { p: 'Creature blueprint', n: data.nhName, t: data.nhType, sz: data.nhSize, ft: data.nhFeatures, ab: data.nhAbilities, bh: data.nhBehavior } }[lang];
-                return { type: 'non-human', name: T.n, physical: `${T.p}: Sebuah ${T.t} bernama "${T.n}". Ukuran: ${T.sz}. Ciri khas: ${T.ft}. Kemampuan: ${T.ab}. Sifat: ${T.bh}.` };
-            }
-
-            function getLocationBlueprint(data, lang) {
-                const name = data.locName, type = data.locType || 'tempat', atmosphere = data.locAtmosphere || 'normal', elements = data.locElements, era = data.locEra || 'Modern';
-                if (lang === 'id') { return `Cetak biru lokasi: sebuah ${type} di era ${era}, bernama "${name}", dengan atmosfer ${atmosphere}. Elemen kunci: ${elements}.`; } 
-                else { return `Location blueprint: a ${type.toLowerCase()} from the ${era} era, named "${name}", with a ${atmosphere.toLowerCase()} atmosphere. Key elements: ${elements}.`; }
-            }
-
-            function populateForm(data) {
-                Object.keys(data).forEach(id => {
-                    const el = document.getElementById(id);
-                    if (!el) return;
-                    if (el.classList.contains('feature-select')) {
-                        const otherInput = document.getElementById(id + 'Other');
-                        const optionExists = [...el.options].some(opt => opt.value === data[id]);
-                        if (optionExists || data[id] === '') { el.value = data[id]; otherInput.classList.add('hidden'); otherInput.value = ''; } 
-                        else { el.value = 'other'; otherInput.value = data[id]; otherInput.classList.remove('hidden'); }
-                    } else { el.value = data[id]; }
-                });
-                updateFormForGender(data.charGender || 'pria');
-            }
-
-            function setFormMode(type, mode, name = '') {
-                if (type === 'char') {
-                    if (mode === 'edit') {
-                        elements.charFormTitle.textContent = `Mengedit Profil: ${name}`;
-                        elements.charSubmitBtn.textContent = 'Perbarui Karakter';
-                        elements.charSubmitBtn.classList.replace('btn-primary', 'btn-success');
-                        elements.cancelEditBtn.classList.remove('hidden');
-                    } else {
-                        editingCharacterId = null;
-                        elements.charFormTitle.textContent = 'Buat Karakter Baru';
-                        elements.charSubmitBtn.textContent = 'Simpan Karakter Baru';
-                        elements.charSubmitBtn.classList.replace('btn-success', 'btn-primary');
-                        elements.cancelEditBtn.classList.add('hidden');
-                        elements.charForm.reset();
-                        updateFormForGender(document.getElementById('charGender').value);
-                    }
-                } // Add logic for non-human edit later if needed
-            }
-            
-            function renderLists() {
-                elements.charListDiv.innerHTML = '';
-                elements.nonHumanListDiv.innerHTML = '';
-                elements.locListDiv.innerHTML = '';
-                elements.noProfilesMsg.classList.toggle('hidden', characters.length > 0);
-                elements.noNonHumansMsg.classList.toggle('hidden', nonHumans.length > 0);
-                elements.noLocationsMsg.classList.toggle('hidden', locations.length > 0);
-
-                characters.forEach(char => {
-                    const item = document.createElement('div'); item.className = 'profile-item';
-                    item.innerHTML = `<span class="font-medium">${char.name}</span><div class="space-x-2"><button class="btn btn-sm btn-warning edit-btn" data-type="char" data-id="${char.id}">Edit</button><button class="btn btn-sm btn-danger delete-btn" data-type="char" data-id="${char.id}">Hapus</button></div>`;
-                    elements.charListDiv.appendChild(item);
-                });
+        for (let i = 0; i < 9; i++) {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'sudoku-row';
+            const row = [];
+            for (let j = 0; j < 9; j++) {
+                const cellDiv = document.createElement('div');
+                cellDiv.className = 'sudoku-cell';
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.pattern = "[1-9]";
+                input.maxLength = 1;
                 
-                nonHumans.forEach(char => {
-                    const item = document.createElement('div'); item.className = 'profile-item';
-                    item.innerHTML = `<span class="font-medium">${char.name}</span><button class="btn btn-sm btn-danger delete-btn" data-type="nh" data-id="${char.id}">Hapus</button>`;
-                    elements.nonHumanListDiv.appendChild(item);
+                input.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/[^1-9]/g, '');
                 });
-                
-                locations.forEach(loc => {
-                    const item = document.createElement('div'); item.className = 'profile-item';
-                    item.innerHTML = `<span class="font-medium">${loc.name}</span><button class="btn btn-sm btn-danger delete-btn" data-type="loc" data-id="${loc.id}">Hapus</button>`;
-                    elements.locListDiv.appendChild(item);
-                });
-                resetActorSelectors();
+                cellDiv.appendChild(input);
+                rowDiv.appendChild(cellDiv);
+                row.push(input);
             }
-            
-            function createActorSelect() {
-                const select = document.createElement('select');
-                select.className = 'form-select actor-select';
-                
-                const charOptGroup = document.createElement('optgroup'); charOptGroup.label = "Karakter Human";
-                characters.forEach(c => charOptGroup.appendChild(new Option(c.name, `char-${c.id}`)));
-                select.appendChild(charOptGroup);
+            container.appendChild(rowDiv);
+            cells.push(row);
+        }
 
-                const nhOptGroup = document.createElement('optgroup'); nhOptGroup.label = "Karakter Non-Human";
-                nonHumans.forEach(c => nhOptGroup.appendChild(new Option(c.name, `nh-${c.id}`)));
-                select.appendChild(nhOptGroup);
-                
-                select.insertBefore(new Option('-- Pilih Aktor --', ''), select.firstChild);
-                return select;
+        function getBoard() {
+            const board = [];
+            for (let i = 0; i < 9; i++) {
+                const row = [];
+                for (let j = 0; j < 9; j++) {
+                    const val = parseInt(cells[i][j].value) || 0;
+                    row.push(val);
+                }
+                board.push(row);
             }
-            
-            function addActorSelector() {
-                const container = document.createElement('div');
-                container.className = 'flex items-center space-x-2 actor-row mt-2';
-                const newSelect = createActorSelect();
-                container.appendChild(newSelect);
+            return board;
+        }
 
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.textContent = 'X';
-                removeBtn.className = 'btn btn-danger btn-sm remove-actor-btn';
-                container.appendChild(removeBtn);
+        function setBoard(board, initialBoard) {
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    const cellInput = cells[i][j];
+                    const cellDiv = cellInput.parentElement;
+                    
+                    cellInput.value = board[i][j] === 0 ? '' : board[i][j];
+                    cellDiv.classList.remove('initial-value', 'solved-value');
+                    cellInput.disabled = false;
 
-                elements.actorSelectorContainer.appendChild(container);
-            }
-            
-            function resetActorSelectors() {
-                elements.actorSelectorContainer.innerHTML = '';
-                const firstSelectContainer = document.createElement('div');
-                firstSelectContainer.className = 'flex items-center space-x-2 actor-row';
-                firstSelectContainer.appendChild(createActorSelect());
-                elements.actorSelectorContainer.appendChild(firstSelectContainer);
-                
-                elements.sceneLocSelect.innerHTML = '<option value="">-- Lokasi --</option>';
-                locations.forEach(loc => {
-                    elements.sceneLocSelect.add(new Option(loc.name, loc.id));
-                });
-            }
-
-            elements.addActorBtn.addEventListener('click', addActorSelector);
-            elements.actorSelectorContainer.addEventListener('click', e => {
-                if (e.target.classList.contains('remove-actor-btn')) {
-                    if (elements.actorSelectorContainer.querySelectorAll('.actor-row').length > 1) {
-                        e.target.closest('.actor-row').remove();
-                    } else {
-                        alert('Minimal harus ada satu aktor.');
+                    if (initialBoard && initialBoard[i][j] !== 0) {
+                        cellDiv.classList.add('initial-value');
+                        cellInput.disabled = true;
+                    } else if (board[i][j] !== 0) {
+                        cellDiv.classList.add('solved-value');
+                        cellInput.style.animationDelay = `${i * 40 + j * 15}ms`;
                     }
                 }
-            });
-
-            elements.charTabBtn.addEventListener('click', () => switchTab('char'));
-            elements.locTabBtn.addEventListener('click', () => switchTab('loc'));
-            elements.nonHumanTabBtn.addEventListener('click', () => switchTab('nonhuman'));
-            function switchTab(activeTab) {
-                ['char', 'loc', 'nonhuman'].forEach(tab => {
-                    const divId = tab === 'char' ? 'characterCreator' : tab === 'loc' ? 'locationCreator' : 'nonHumanCreator';
-                    const btnId = tab === 'char' ? 'characterTabBtn' : tab === 'loc' ? 'locationTabBtn' : 'nonHumanTabBtn';
-                    document.getElementById(divId).classList.add('hidden');
-                    document.getElementById(btnId).classList.remove('active');
-                });
-                const activeDiv = document.getElementById(activeTab === 'char' ? 'characterCreator' : activeTab === 'loc' ? 'locationCreator' : 'nonHumanCreator');
-                const activeBtn = document.getElementById(activeTab === 'char' ? 'characterTabBtn' : activeTab === 'loc' ? 'locationTabBtn' : 'nonHumanTabBtn');
-                activeDiv.classList.remove('hidden');
-                activeBtn.classList.add('active');
             }
+        }
 
-            elements.charForm.addEventListener('submit', e => {
-                e.preventDefault();
-                const name = document.getElementById('charName').value.trim();
-                if (!name) return alert('Nama karakter wajib diisi.');
-                const formData = getCharacterData(false); // get raw data
-                if (editingCharacterId) {
-                    const index = characters.findIndex(c => c.id == editingCharacterId);
-                    if (index > -1) characters[index] = { ...characters[index], name: name, rawData: formData };
-                } else {
-                    characters.push({ id: Date.now(), name: name, rawData: formData });
-                }
-                localStorage.setItem(CHAR_KEY, JSON.stringify(characters));
-                renderLists();
-                setFormMode('char', 'create');
-            });
-
-            elements.nonHumanForm.addEventListener('submit', e => {
-                e.preventDefault();
-                const name = document.getElementById('nhName').value.trim();
-                if (!name) return alert('Nama makhluk wajib diisi.');
-                const formData = getNonHumanData();
-                nonHumans.push({ id: Date.now(), name: name, rawData: formData });
-                localStorage.setItem(NH_KEY, JSON.stringify(nonHumans));
-                renderLists();
-                elements.nonHumanForm.reset();
-            });
-
-            elements.locForm.addEventListener('submit', e => {
-                e.preventDefault();
-                const name = document.getElementById('locName').value.trim();
-                if (!name) return alert('Nama lokasi wajib diisi.');
-                const locData = getLocationData();
-                locations.push({ id: Date.now(), name: name, rawData: locData });
-                localStorage.setItem(LOC_KEY, JSON.stringify(locations));
-                renderLists();
-                elements.locForm.reset();
-            });
-            
-            elements.generateSceneBtn.addEventListener('click', () => {
-                const selectedActorElements = elements.actorSelectorContainer.querySelectorAll('.actor-select');
-                const selectedActorIds = Array.from(selectedActorElements).map(s => s.value).filter(Boolean);
-                const locId = elements.sceneLocSelect.value;
-                if (selectedActorIds.length === 0 || !locId) return alert('Silakan pilih minimal satu aktor dan satu lokasi.');
-                
-                let blueprintsId = [], blueprintsEn = [];
-                selectedActorIds.forEach(actorIdString => {
-                    const [type, id] = actorIdString.split('-');
-                    const actor = type === 'char' ? characters.find(c => c.id == id) : nonHumans.find(c => c.id == id);
-                    if (actor) {
-                        const bpId = type === 'char' ? generateBlueprintStrings(actor.rawData, 'id') : generateNonHumanBlueprint(actor.rawData, 'id');
-                        const bpEn = type === 'char' ? generateBlueprintStrings(actor.rawData, 'en') : generateNonHumanBlueprint(actor.rawData, 'en');
-                        blueprintsId.push(Object.values(bpId).slice(1).join(' '));
-                        blueprintsEn.push(Object.values(bpEn).slice(1).join(' '));
-                    }
-                });
-
-                const location = locations.find(l => l.id == locId);
-                if (!location) return alert('Lokasi tidak ditemukan.');
-
-                const locationBlueprintId = getLocationBlueprint(location.rawData, 'id');
-                const locationBlueprintEn = getLocationBlueprint(location.rawData, 'en');
-
-                const sceneStyle = getVal('sceneStyle'), cameraMovement = getVal('cameraMovement'), sceneAction = getVal('sceneAction');
-                const cinematicDesc = `${sceneStyle}, ${cameraMovement}`;
-                const commonScene = sceneAction ? `: ${sceneAction}` : '.';
-                
-                const finalId = [cinematicDesc, ...blueprintsId, locationBlueprintId, `Adegan${commonScene}`].filter(Boolean).join('\n\n');
-                const finalEn = [cinematicDesc, ...blueprintsEn, locationBlueprintEn, `Scene${commonScene}`].filter(Boolean).join('\n\n');
-
-                elements.outputId.value = finalId;
-                elements.outputEn.value = finalEn;
-            });
-
-            document.addEventListener('click', (e) => {
-                const target = e.target;
-                if(target.matches('.delete-btn')) {
-                    const id = target.dataset.id;
-                    const type = target.dataset.type;
-                    if (confirm(`Hapus item ini?`)){
-                        if (type === 'char') { characters = characters.filter(c => c.id != id); localStorage.setItem(CHAR_KEY, JSON.stringify(characters)); } 
-                        else if (type === 'nh') { nonHumans = nonHumans.filter(c => c.id != id); localStorage.setItem(NH_KEY, JSON.stringify(nonHumans)); }
-                        else if (type === 'loc') { locations = locations.filter(l => l.id != id); localStorage.setItem(LOC_KEY, JSON.stringify(locations)); }
-                        renderLists();
-                    }
-                } else if (target.matches('.edit-btn')) {
-                    const id = target.dataset.id;
-                    const charToEdit = characters.find(c => c.id == id);
-                    if (charToEdit) { editingCharacterId = id; populateForm(charToEdit.rawData); setFormMode('char', 'edit', charToEdit.name); elements.charTabBtn.click(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-                }
-            });
-
-            elements.copyBtnId.addEventListener('click', () => { if (elements.outputId.value) navigator.clipboard.writeText(elements.outputId.value); });
-            elements.copyBtnEn.addEventListener('click', () => { if (elements.outputEn.value) navigator.clipboard.writeText(elements.outputEn.value); });
-
-            const hairOptions = {
-                pria: [ {value: 'pendek rapi', text: 'Pendek Rapi'}, {value: 'cepak', text: 'Cepak'}, {value: 'undercut', text: 'Undercut'}, {value: 'gondrong sebahu', text: 'Gondrong Sebahu'}, {value: 'botak', text: 'Botak'} ],
-                wanita: [ {value: 'panjang lurus', text: 'Panjang Lurus'}, {value: 'panjang bergelombang', text: 'Panjang Bergelombang'}, {value: 'bob sebahu', text: 'Bob Sebahu'}, {value: 'pixie cut', text: 'Pixie Cut'}, {value: 'kuncir kuda', text: 'Kuncir Kuda'}, {value: 'sanggul', text: 'Sanggul'}]
-            };
-            function updateFormForGender(gender) {
-                document.getElementById('facialHairContainer').classList.toggle('hidden', gender !== 'pria');
-                const hairSelect = document.getElementById('charHair');
-                hairSelect.innerHTML = '<option value="">-- Gaya Rambut --</option>';
-                hairOptions[gender].forEach(opt => hairSelect.add(new Option(opt.text, opt.value)));
-                hairSelect.add(new Option('Lainnya...', 'other'));
-            }
-            document.getElementById('charGender').addEventListener('change', e => updateFormForGender(e.target.value));
-            
-            document.querySelectorAll('.feature-select').forEach(select => {
-                select.addEventListener('change', e => {
-                    const otherInput = e.target.closest('[data-dependency-container]').querySelector('.other-input');
-                    otherInput.classList.toggle('hidden', e.target.value !== 'other');
-                    if (e.target.value !== 'other') otherInput.value = '';
-                });
-            });
-
-            const storedChars = localStorage.getItem(CHAR_KEY);
-            const storedLocs = localStorage.getItem(LOC_KEY);
-            const storedNh = localStorage.getItem(NH_KEY);
-            if (storedChars) characters = JSON.parse(storedChars);
-            if (storedLocs) locations = JSON.parse(storedLocs);
-            if (storedNh) nonHumans = JSON.parse(storedNh);
-            
-            renderLists();
-            elements.charTabBtn.click();
+        clearBtn.addEventListener('click', () => {
+            const emptyBoard = Array(9).fill(0).map(() => Array(9).fill(0));
+            setBoard(emptyBoard, null);
+            messageBox.textContent = '';
         });
+        
+        function findEmpty(board) {
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (board[r][c] === 0) return [r, c];
+                }
+            }
+            return null;
+        }
+
+        function isValid(board, num, pos) {
+            const [r, c] = pos;
+            for (let i = 0; i < 9; i++) {
+                if (board[r][i] === num && c !== i) return false;
+            }
+            for (let i = 0; i < 9; i++) {
+                if (board[i][c] === num && r !== i) return false;
+            }
+            const boxRowStart = Math.floor(r / 3) * 3;
+            const boxColStart = Math.floor(c / 3) * 3;
+            for (let i = boxRowStart; i < boxRowStart + 3; i++) {
+                for (let j = boxColStart; j < boxColStart + 3; j++) {
+                    if (board[i][j] === num && (i !== r || j !== c)) return false;
+                }
+            }
+            return true;
+        }
+
+        function solve(board) {
+            const find = findEmpty(board);
+            if (find === null) return true;
+            
+            const [row, col] = find;
+            for (let num = 1; num <= 9; num++) {
+                if (isValid(board, num, [row, col])) {
+                    board[row][col] = num;
+                    if (solve(board)) return true;
+                    board[row][col] = 0;
+                }
+            }
+            return false;
+        }
+        
+        // --- BAGIAN GENERATOR TEKA-TEKI ACAK ---
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        let solutionCount;
+        function countSolutions(board) {
+            const find = findEmpty(board);
+            if (find === null) {
+                solutionCount++;
+                return;
+            }
+
+            const [row, col] = find;
+            const numbers = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+
+            for (let i = 0; i < numbers.length; i++) {
+                if (isValid(board, numbers[i], [row, col])) {
+                    board[row][col] = numbers[i];
+                    countSolutions(board);
+                    board[row][col] = 0; // Backtrack
+                    if (solutionCount > 1) return; // Optimasi: berhenti jika sudah lebih dari 1
+                }
+            }
+        }
+
+        function generatePuzzle(difficulty = 40) { // difficulty: jumlah angka yang akan dihapus
+            let board = Array(9).fill(0).map(() => Array(9).fill(0));
+            
+            // 1. Buat papan yang terisi penuh dan valid
+            fillBoard(board);
+
+            // 2. Buat lubang di papan
+            let positions = [];
+            for(let i=0; i<81; i++) positions.push(i);
+            shuffle(positions);
+            
+            let removedCount = 0;
+            for(let i=0; i<positions.length; i++) {
+                if(removedCount >= difficulty) break;
+
+                const row = Math.floor(positions[i] / 9);
+                const col = positions[i] % 9;
+                const temp = board[row][col];
+                
+                board[row][col] = 0;
+                
+                // 3. Cek apakah solusi masih unik
+                solutionCount = 0;
+                let boardCopy = JSON.parse(JSON.stringify(board));
+                countSolutions(boardCopy);
+
+                if (solutionCount !== 1) {
+                    board[row][col] = temp; // Jika tidak unik, kembalikan angka
+                } else {
+                    removedCount++;
+                }
+            }
+            return board;
+        }
+
+        function fillBoard(board) {
+            const find = findEmpty(board);
+            if (find === null) return true;
+
+            const [row, col] = find;
+            const numbers = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+
+            for (let i = 0; i < numbers.length; i++) {
+                if (isValid(board, numbers[i], [row, col])) {
+                    board[row][col] = numbers[i];
+                    if (fillBoard(board)) return true;
+                    board[row][col] = 0; // Backtrack
+                }
+            }
+            return false;
+        }
+        
+        async function loadNewPuzzle() {
+            messageBox.textContent = 'Membuat teka-teki baru...';
+            exampleBtn.disabled = true;
+            clearBtn.disabled = true;
+            solveBtn.disabled = true;
+
+            // Beri waktu browser untuk update UI sebelum komputasi berat
+            setTimeout(() => {
+                const puzzle = generatePuzzle(45); // Coba hapus 45 angka
+                const initialBoard = JSON.parse(JSON.stringify(puzzle));
+                setBoard(puzzle, initialBoard);
+                
+                messageBox.textContent = '';
+                exampleBtn.disabled = false;
+                clearBtn.disabled = false;
+                solveBtn.disabled = false;
+            }, 50);
+        }
+
+        exampleBtn.addEventListener('click', loadNewPuzzle);
+
+        solveBtn.addEventListener('click', () => {
+            const board = getBoard();
+            const initialBoard = JSON.parse(JSON.stringify(board));
+            messageBox.textContent = '';
+
+            // Validate initial board
+            for(let r=0; r<9; r++){
+                for(let c=0; c<9; c++){
+                    if(initialBoard[r][c] !== 0){
+                        const num = initialBoard[r][c];
+                        let boardCopy = JSON.parse(JSON.stringify(initialBoard));
+                        boardCopy[r][c] = 0;
+                        if(!isValid(boardCopy, num, [r,c])){
+                             messageBox.textContent = 'Teka-teki awal tidak valid.';
+                             return;
+                        }
+                    }
+                }
+            }
+
+            if (solve(board)) {
+                setBoard(board, initialBoard);
+            } else {
+                messageBox.textContent = 'Teka-teki ini tidak memiliki solusi.';
+            }
+        });
+        
+        // Muat teka-teki acak saat pertama kali dibuka
+        loadNewPuzzle();
+
+        // --- REGISTRASI SERVICE WORKER UNTUK PWA ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
     </script>
 </body>
 </html>
