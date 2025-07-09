@@ -2,148 +2,195 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Madda Soft Game | Sudoku</title>
     
-    <!-- Link ke Manifest Aplikasi -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4f46e5">
-
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
             touch-action: manipulation;
-            background-color: #f0f4f8;
-            background-image: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            background-color: #f4f7f9;
+            color: #1a202c;
         }
         .sudoku-grid {
             display: grid;
             grid-template-columns: 1fr;
             grid-template-rows: repeat(9, 1fr);
-            border: 3px solid #374151;
+            border: 3px solid #cbd5e1;
             border-radius: 12px;
             overflow: hidden;
             width: 100%;
             max-width: 500px;
             aspect-ratio: 1 / 1;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-        .sudoku-row {
-            display: grid;
-            grid-template-columns: repeat(9, 1fr);
-        }
+        .sudoku-row { display: grid; grid-template-columns: repeat(9, 1fr); }
         .sudoku-cell {
-            width: 100%;
-            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: clamp(1rem, 5vw, 1.75rem);
             font-weight: 500;
-            border: 1px solid #e5e7eb;
-            box-sizing: border-box;
+            border: 1px solid #e2e8f0;
             background-color: #ffffff;
-            color: #1f2937;
-            transition: background-color 0.3s ease;
+            color: #2d3748;
+            transition: background-color 0.2s ease;
         }
         .sudoku-cell input {
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            border: none;
-            background-color: transparent;
-            font-size: inherit;
-            font-weight: inherit;
-            color: inherit;
-            outline: none;
-            padding: 0;
-            caret-color: #4f46e5;
+            width: 100%; height: 100%; text-align: center; border: none; background-color: transparent;
+            font-size: inherit; font-weight: inherit; color: inherit; outline: none; padding: 0; pointer-events: none;
         }
-        .sudoku-cell input:focus {
-            background-color: #eef2ff;
+        .sudoku-cell.initial-value {
+            background-color: #f7fafc;
         }
         .sudoku-cell.initial-value input {
-            background-color: #f8fafc;
-            font-weight: 600;
-            color: #1e293b;
+            font-weight: 700;
+            color: #2d3748;
         }
-        .sudoku-cell.solved-value input {
-             color: #4f46e5;
-             font-weight: 600;
-             animation: pop-in 0.4s ease-out forwards;
+        .sudoku-cell.user-filled input {
+             color: #4299e1;
+             font-weight: 700;
         }
-        @keyframes pop-in {
-            0% { transform: scale(0.4); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+        .selected-cell {
+            background-color: #ebf8ff !important;
+            border: 2px solid #4299e1;
         }
-        /* Border untuk blok 3x3 */
-        .sudoku-cell:nth-child(3n) { border-right: 2px solid #9ca3af; }
+        .highlight-number {
+            background-color: #c6f6d5 !important;
+        }
+        .error-highlight {
+            animation: flash-red 0.6s ease-out;
+        }
+        @keyframes flash-red {
+            0%, 100% { background-color: #ffffff; }
+            50% { background-color: #fed7d7; }
+        }
+        .sudoku-cell:nth-child(3n) { border-right: 2px solid #a0aec0; }
         .sudoku-cell:nth-child(9n) { border-right: none; }
-        .sudoku-grid > .sudoku-row:nth-child(3n) .sudoku-cell { border-bottom: 2px solid #9ca3af; }
+        .sudoku-grid > .sudoku-row:nth-child(3n) .sudoku-cell { border-bottom: 2px solid #a0aec0; }
         .sudoku-grid > .sudoku-row:last-child .sudoku-cell { border-bottom: none; }
-
-        #solve-btn {
-            animation: pulse-animation 2s infinite;
+        .difficulty-btn.active {
+            background-color: #4299e1;
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(0, 118, 255, 0.39);
+            transform: translateY(-2px);
         }
-        @keyframes pulse-animation {
-            0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+        .palette-button {
+            background: #ffffff;
+            border-radius: 0.5rem;
+            color: #2d3748;
+            font-weight: 700;
+            font-size: 1.25rem;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        .palette-button:active {
+            transform: scale(0.95);
+            box-shadow: none;
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="flex flex-col h-screen">
 
-    <main class="w-full max-w-4xl bg-white/70 backdrop-blur-xl p-4 sm:p-6 rounded-2xl shadow-2xl shadow-blue-100/50 border border-white/50">
-        <div class="flex flex-col lg:flex-row gap-6 lg:gap-8">
-            
-            <!-- Panel Kiri: Papan Sudoku -->
-            <div class="flex-shrink-0 w-full lg:w-1/2 flex items-center justify-center">
-                <div id="sudoku-container" class="sudoku-grid"></div>
-            </div>
+    <div id="welcome-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 bg-gray-900 bg-opacity-50">
+        <div class="bg-white w-full max-w-sm p-6 text-center rounded-xl shadow-2xl transform transition-all scale-95 opacity-0">
+            <h2 class="text-2xl font-bold text-gray-800">Selamat Datang!</h2>
+            <p class="text-gray-500 mt-2 mb-4">Silakan masukkan nama Anda untuk memulai.</p>
+            <input id="username-input" type="text" placeholder="Ketik nama Anda di sini..." class="w-full bg-gray-100 text-gray-800 placeholder-gray-400 border-2 border-gray-200 rounded-lg px-4 py-2 text-center outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+            <button id="start-game-btn" class="w-full mt-4 bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                Mulai Bermain
+            </button>
+        </div>
+    </div>
 
-            <!-- Panel Kanan: Kontrol -->
-            <div class="flex-grow flex flex-col justify-center text-center lg:text-left">
-                <div>
-                    <h1 class="text-4xl lg:text-5xl font-bold text-gray-800 tracking-tight">Madda Soft Game</h1>
-                    <p class="text-gray-600 mt-2 text-2xl font-medium">Sudoku Game</p>
+    <main class="flex-grow w-full max-w-lg mx-auto p-3 flex flex-col justify-center overflow-y-auto">
+        <header class="flex justify-between items-center mb-2">
+            <div id="lives-display" class="flex gap-1"></div>
+            <div class="text-right">
+                <p id="username-display" class="text-lg font-bold text-gray-800"></p>
+                <div id="points-display" class="text-xs font-semibold text-gray-500 flex gap-3 justify-end">
+                    <div id="anak-sd-points" class="flex items-center gap-1"><span>🏆</span> <span class="font-bold">0</span></div>
+                    <div id="bocah-gede-points" class="flex items-center gap-1"><span>👑</span> <span class="font-bold">0</span></div>
                 </div>
-                
-                <div class="flex flex-col gap-3 mt-8">
-                    <button id="solve-btn" class="flex items-center justify-center gap-2 w-full bg-indigo-600 text-white font-bold py-3.5 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-300 transform hover:scale-105 shadow-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18m-6-6h12M5 12a7 7 0 0 1 7-7 7 7 0 0 1 7 7m-7 7a7 7 0 0 0 7-7 7 7 0 0 0-7-7"/></svg>
-                        <span>Selesaikan</span>
-                    </button>
-                    <div class="flex flex-col sm:flex-row gap-3">
-                         <button id="clear-btn" class="flex items-center justify-center gap-2 w-full bg-gray-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                            <span>Bersihkan</span>
-                        </button>
-                        <button id="example-btn" class="flex items-center justify-center gap-2 w-full bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-200 transition-all duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 14a4 4 0 1 1 4-4 4 4 0 0 1-4 4z"/></svg>
-                            <span>Contoh Baru</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div id="message-box" class="mt-6 text-center h-6 text-indigo-600 font-semibold"></div>
             </div>
+        </header>
+
+        <div class="text-center my-2">
+            <h1 class="text-xl font-bold text-gray-800 tracking-tight">Madda Soft Game</h1>
+            <p class="text-gray-500 text-sm">Sudoku Dolanane Bocah Pinter</p>
+        </div>
+
+        <div id="sudoku-container" class="sudoku-grid"></div>
+        <div id="message-box" class="mt-3 text-center h-5 text-blue-600 font-semibold"></div>
+
+        <div class="grid grid-cols-2 gap-2 mt-3">
+            <button id="anak-sd-btn" class="difficulty-btn bg-white text-gray-700 font-bold py-3 px-2 rounded-lg transition-all duration-200 active">Anak SD</button>
+            <button id="bocah-gede-btn" class="difficulty-btn bg-white text-gray-700 font-bold py-3 px-2 rounded-lg transition-all duration-200">Bocah Gede</button>
         </div>
     </main>
 
-    <script>
-        const container = document.getElementById('sudoku-container');
-        const solveBtn = document.getElementById('solve-btn');
-        const clearBtn = document.getElementById('clear-btn');
-        const exampleBtn = document.getElementById('example-btn');
-        const messageBox = document.getElementById('message-box');
-        const cells = [];
+    <div id="number-palette" class="w-full bg-gray-100 border-t border-gray-200 p-2 grid grid-cols-9 gap-2 flex-shrink-0">
+    </div>
+    
+    <footer class="w-full text-center py-2 bg-gray-100 flex-shrink-0">
+        <p class="text-xs text-gray-500">
+            © Design Creations 2025 By : Madda Naya Feat Gemini
+        </p>
+    </footer>
+    
+    <div id="result-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm text-center p-6 transform transition-all scale-95 opacity-0">
+            <h2 id="result-title" class="text-3xl font-bold"></h2>
+            <p id="result-message" class="text-gray-600 mt-2 mb-6"></p>
+            <button id="next-level-btn" class="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-600 transition-all duration-300">
+                Lanjut Main
+            </button>
+        </div>
+    </div>
 
+    <script>
+        // --- Elemen UI ---
+        const container = document.getElementById('sudoku-container');
+        const numberPalette = document.getElementById('number-palette');
+        const resultModal = document.getElementById('result-modal');
+        const resultTitle = document.getElementById('result-title');
+        const resultMessage = document.getElementById('result-message');
+        const nextLevelBtn = document.getElementById('next-level-btn');
+        const difficultyButtons = { 'anak-sd': document.getElementById('anak-sd-btn'), 'bocah-gede': document.getElementById('bocah-gede-btn') };
+        const pointsDisplay = { 'anak-sd': document.querySelector('#anak-sd-points span.font-bold'), 'bocah-gede': document.querySelector('#bocah-gede-points span.font-bold') };
+        const livesDisplay = document.getElementById('lives-display');
+        const welcomeModal = document.getElementById('welcome-modal');
+        const usernameInput = document.getElementById('username-input');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const usernameDisplay = document.getElementById('username-display');
+
+        // --- Variabel Game ---
+        const cells = [];
+        let selectedCell = null;
+        let currentInitialBoard = null;
+        let currentSolutionBoard = null;
+        let currentDifficulty = 'anak-sd';
+        let synth, noiseSynth;
+        let isToneStarted = false;
+        let gamePoints = { 'anak-sd': 0, 'bocah-gede': 0 };
+        let lives = 0;
+
+        function startAudio() { 
+            if (!isToneStarted) { 
+                Tone.start(); 
+                synth = new Tone.Synth().toDestination(); 
+                noiseSynth = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0 } }).toDestination();
+                isToneStarted = true; 
+            } 
+        }
+
+        // --- Inisialisasi Papan & Palet ---
         for (let i = 0; i < 9; i++) {
             const rowDiv = document.createElement('div');
             rowDiv.className = 'sudoku-row';
@@ -152,247 +199,245 @@
                 const cellDiv = document.createElement('div');
                 cellDiv.className = 'sudoku-cell';
                 const input = document.createElement('input');
-                input.type = 'text';
-                input.pattern = "[1-9]";
-                input.maxLength = 1;
-                
-                input.addEventListener('input', (e) => {
-                    e.target.value = e.target.value.replace(/[^1-9]/g, '');
-                });
+                input.readOnly = true;
+                cellDiv.addEventListener('click', () => handleCellClick(i, j));
                 cellDiv.appendChild(input);
                 rowDiv.appendChild(cellDiv);
-                row.push(input);
+                // PERBAIKAN: Menyimpan referensi div dan input ke dalam array utama
+                cells[i * 9 + j] = {div: cellDiv, input: input};
             }
             container.appendChild(rowDiv);
-            cells.push(row);
         }
 
-        function getBoard() {
+        numberPalette.innerHTML = '';
+        for (let i = 1; i <= 9; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            btn.id = `palette-btn-${i}`;
+            btn.className = 'palette-button';
+            btn.addEventListener('click', () => handlePaletteClick(i));
+            numberPalette.appendChild(btn);
+        }
+
+        // --- Logika Interaksi UI ---
+        function clearAllHighlights() { cells.forEach(cell => cell.div.classList.remove('selected-cell', 'highlight-number')); }
+        function highlightSimilarNumbers(value) { if (!value) return; cells.forEach(cell => { if (cell.input.value === value) cell.div.classList.add('highlight-number'); }); }
+
+        function handleCellClick(row, col) {
+            startAudio();
+            if (!currentInitialBoard) return;
+            clearAllHighlights();
+            const cell = cells[row * 9 + col];
+            const clickedValue = cell.input.value;
+            if (clickedValue) {
+                selectedCell = null;
+                highlightSimilarNumbers(clickedValue);
+            } else if (currentInitialBoard[row][col] === 0) {
+                selectedCell = { div: cell.div, input: cell.input, row: row, col: col };
+                cell.div.classList.add('selected-cell');
+            }
+        }
+        
+        function handlePaletteClick(number) {
+            if (!selectedCell || lives <= 0) return;
+            startAudio();
+            const { row, col } = selectedCell;
+            const correctNumber = currentSolutionBoard[row][col];
+            if (number === correctNumber) {
+                if (synth) synth.triggerAttackRelease("G4", "16n");
+                selectedCell.input.value = number;
+                selectedCell.div.classList.add('user-filled');
+                clearAllHighlights();
+                highlightSimilarNumbers(number.toString());
+                selectedCell = null;
+                updatePalette();
+                checkWinCondition();
+            } else {
+                handleMistake();
+            }
+        }
+        
+        function handleMistake() {
+            lives--;
+            updateLivesDisplay();
+            if (noiseSynth) noiseSynth.triggerAttackRelease("0.1");
+            selectedCell.div.classList.add('error-highlight');
+            setTimeout(() => selectedCell.div.classList.remove('error-highlight'), 600);
+            if (lives <= 0) {
+                showResultModal(false);
+            }
+        }
+
+        function updatePalette() {
+            const counts = {};
+            for (let i = 1; i <= 9; i++) counts[i] = 0;
+            getBoard().flat().forEach(num => { if (num !== 0) counts[num]++; });
+            for (let i = 1; i <= 9; i++) {
+                document.getElementById(`palette-btn-${i}`).style.display = (counts[i] >= 9) ? 'none' : 'block';
+            }
+        }
+
+        // --- Logika Game Utama ---
+        function getBoard() { 
             const board = [];
             for (let i = 0; i < 9; i++) {
                 const row = [];
                 for (let j = 0; j < 9; j++) {
-                    const val = parseInt(cells[i][j].value) || 0;
-                    row.push(val);
+                    row.push(parseInt(cells[i * 9 + j].input.value) || 0);
                 }
                 board.push(row);
             }
             return board;
         }
-
         function setBoard(board, initialBoard) {
+            currentInitialBoard = initialBoard ? JSON.parse(JSON.stringify(initialBoard)) : null;
+            clearAllHighlights();
             for (let i = 0; i < 9; i++) {
                 for (let j = 0; j < 9; j++) {
-                    const cellInput = cells[i][j];
-                    const cellDiv = cellInput.parentElement;
-                    
-                    cellInput.value = board[i][j] === 0 ? '' : board[i][j];
-                    cellDiv.classList.remove('initial-value', 'solved-value');
-                    cellInput.disabled = false;
-
-                    if (initialBoard && initialBoard[i][j] !== 0) {
-                        cellDiv.classList.add('initial-value');
-                        cellInput.disabled = true;
-                    } else if (board[i][j] !== 0) {
-                        cellDiv.classList.add('solved-value');
-                        cellInput.style.animationDelay = `${i * 40 + j * 15}ms`;
-                    }
+                    const cell = cells[i * 9 + j];
+                    const isInitial = initialBoard && initialBoard[i][j] !== 0;
+                    cell.input.value = board[i][j] === 0 ? '' : board[i][j];
+                    cell.div.classList.remove('initial-value', 'user-filled');
+                    if (isInitial) cell.div.classList.add('initial-value');
                 }
             }
-        }
-
-        clearBtn.addEventListener('click', () => {
-            const emptyBoard = Array(9).fill(0).map(() => Array(9).fill(0));
-            setBoard(emptyBoard, null);
-            messageBox.textContent = '';
-        });
-        
-        function findEmpty(board) {
-            for (let r = 0; r < 9; r++) {
-                for (let c = 0; c < 9; c++) {
-                    if (board[r][c] === 0) return [r, c];
-                }
-            }
-            return null;
-        }
-
-        function isValid(board, num, pos) {
-            const [r, c] = pos;
-            for (let i = 0; i < 9; i++) {
-                if (board[r][i] === num && c !== i) return false;
-            }
-            for (let i = 0; i < 9; i++) {
-                if (board[i][c] === num && r !== i) return false;
-            }
-            const boxRowStart = Math.floor(r / 3) * 3;
-            const boxColStart = Math.floor(c / 3) * 3;
-            for (let i = boxRowStart; i < boxRowStart + 3; i++) {
-                for (let j = boxColStart; j < boxColStart + 3; j++) {
-                    if (board[i][j] === num && (i !== r || j !== c)) return false;
-                }
-            }
-            return true;
-        }
-
-        function solve(board) {
-            const find = findEmpty(board);
-            if (find === null) return true;
-            
-            const [row, col] = find;
-            for (let num = 1; num <= 9; num++) {
-                if (isValid(board, num, [row, col])) {
-                    board[row][col] = num;
-                    if (solve(board)) return true;
-                    board[row][col] = 0;
-                }
-            }
-            return false;
+            selectedCell = null;
         }
         
-        // --- BAGIAN GENERATOR TEKA-TEKI ACAK ---
-
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+        function checkWinCondition() {
+            if (findEmpty(getBoard()) !== null) return;
+            if (JSON.stringify(getBoard()) === JSON.stringify(currentSolutionBoard)) {
+                if (synth) { const now = Tone.now(); synth.triggerAttackRelease("C5", "8n", now); synth.triggerAttackRelease("G5", "8n", now + 0.2); }
+                gamePoints[currentDifficulty]++;
+                savePoints();
+                updatePointsDisplay();
+                showResultModal(true);
             }
-            return array;
-        }
-
-        let solutionCount;
-        function countSolutions(board) {
-            const find = findEmpty(board);
-            if (find === null) {
-                solutionCount++;
-                return;
-            }
-
-            const [row, col] = find;
-            const numbers = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-
-            for (let i = 0; i < numbers.length; i++) {
-                if (isValid(board, numbers[i], [row, col])) {
-                    board[row][col] = numbers[i];
-                    countSolutions(board);
-                    board[row][col] = 0; // Backtrack
-                    if (solutionCount > 1) return; // Optimasi: berhenti jika sudah lebih dari 1
-                }
-            }
-        }
-
-        function generatePuzzle(difficulty = 40) { // difficulty: jumlah angka yang akan dihapus
-            let board = Array(9).fill(0).map(() => Array(9).fill(0));
-            
-            // 1. Buat papan yang terisi penuh dan valid
-            fillBoard(board);
-
-            // 2. Buat lubang di papan
-            let positions = [];
-            for(let i=0; i<81; i++) positions.push(i);
-            shuffle(positions);
-            
-            let removedCount = 0;
-            for(let i=0; i<positions.length; i++) {
-                if(removedCount >= difficulty) break;
-
-                const row = Math.floor(positions[i] / 9);
-                const col = positions[i] % 9;
-                const temp = board[row][col];
-                
-                board[row][col] = 0;
-                
-                // 3. Cek apakah solusi masih unik
-                solutionCount = 0;
-                let boardCopy = JSON.parse(JSON.stringify(board));
-                countSolutions(boardCopy);
-
-                if (solutionCount !== 1) {
-                    board[row][col] = temp; // Jika tidak unik, kembalikan angka
-                } else {
-                    removedCount++;
-                }
-            }
-            return board;
-        }
-
-        function fillBoard(board) {
-            const find = findEmpty(board);
-            if (find === null) return true;
-
-            const [row, col] = find;
-            const numbers = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-
-            for (let i = 0; i < numbers.length; i++) {
-                if (isValid(board, numbers[i], [row, col])) {
-                    board[row][col] = numbers[i];
-                    if (fillBoard(board)) return true;
-                    board[row][col] = 0; // Backtrack
-                }
-            }
-            return false;
         }
         
-        async function loadNewPuzzle() {
-            messageBox.textContent = 'Membuat teka-teki baru...';
-            exampleBtn.disabled = true;
-            clearBtn.disabled = true;
-            solveBtn.disabled = true;
-
-            // Beri waktu browser untuk update UI sebelum komputasi berat
+        function showResultModal(isWin) {
+            const modal = resultModal;
+            const titleEl = resultTitle;
+            const messageEl = resultMessage;
+            const buttonEl = nextLevelBtn;
+            if (isWin) {
+                titleEl.textContent = "Hebat!";
+                titleEl.className = "text-3xl font-bold text-green-500";
+                messageEl.textContent = "Kamu berhasil menyelesaikan level ini.";
+                buttonEl.textContent = "Lanjut Main";
+            } else {
+                titleEl.className = "text-2xl font-bold text-red-500";
+                titleEl.textContent = currentDifficulty === 'anak-sd' ? "Kamu Pinter Tapi Kurang Teliti" : "Sinau Maneh Yo Dik Yoo..!";
+                messageEl.textContent = "Kesempatanmu sudah habis.";
+                buttonEl.textContent = "Coba Lagi";
+            }
+            const content = modal.querySelector('div');
+            modal.classList.remove('hidden');
             setTimeout(() => {
-                const puzzle = generatePuzzle(45); // Coba hapus 45 angka
-                const initialBoard = JSON.parse(JSON.stringify(puzzle));
-                setBoard(puzzle, initialBoard);
-                
-                messageBox.textContent = '';
-                exampleBtn.disabled = false;
-                clearBtn.disabled = false;
-                solveBtn.disabled = false;
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        // --- Poin & Nyawa ---
+        function savePoints() { localStorage.setItem('sudokuGamePoints', JSON.stringify(gamePoints)); }
+        function loadPoints() { const saved = localStorage.getItem('sudokuGamePoints'); if (saved) gamePoints = JSON.parse(saved); updatePointsDisplay(); }
+        function updatePointsDisplay() { pointsDisplay['anak-sd'].textContent = gamePoints['anak-sd']; pointsDisplay['bocah-gede'].textContent = gamePoints['bocah-gede']; }
+        function updateLivesDisplay() {
+            livesDisplay.innerHTML = '';
+            for (let i = 0; i < lives; i++) {
+                const heart = document.createElement('span');
+                heart.textContent = '❤️';
+                heart.className = 'heart-icon text-xl';
+                livesDisplay.appendChild(heart);
+            }
+        }
+
+        // --- Generator & Solver ---
+        function findEmpty(b) { for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (b[r][c] === 0) return [r, c]; return null; }
+        function solve(b) { const fi = findEmpty(b); if (fi === null) return true; const [r, c] = fi; for (let n = 1; n <= 9; n++) { if (isValid(b, n, [r, c])) { b[r][c] = n; if (solve(b)) return true; b[r][c] = 0; } } return false; }
+        function isValid(b, n, p) { const [r, c] = p; for (let i = 0; i < 9; i++) if (b[r][i] === n && c !== i) return false; for (let i = 0; i < 9; i++) if (b[i][c] === n && r !== i) return false; const brs = Math.floor(r / 3) * 3, bcs = Math.floor(c / 3) * 3; for (let i = brs; i < brs + 3; i++) for (let j = bcs; j < bcs + 3; j++) if (b[i][j] === n && (i !== r || j !== c)) return false; return true; }
+        function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+        let solutionCount; function countSolutions(b) { const fi = findEmpty(b); if (fi === null) { solutionCount++; return; } const [r, c] = fi; const nums = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]); for (let i = 0; i < nums.length; i++) { if (isValid(b, nums[i], [r, c])) { b[r][c] = nums[i]; countSolutions(b); b[r][c] = 0; if (solutionCount > 1) return; } } }
+        function generatePuzzle(d) { let b = Array(9).fill(0).map(() => Array(9).fill(0)); fillBoard(b); let p = []; for(let i=0; i<81; i++) p.push(i); shuffle(p); let rc = 0; for(let i=0; i<p.length; i++) { if(rc >= d) break; const r = Math.floor(p[i] / 9), c = p[i] % 9; const t = b[r][c]; b[r][c] = 0; solutionCount = 0; let bc = JSON.parse(JSON.stringify(b)); countSolutions(bc); if (solutionCount !== 1) b[r][c] = t; else rc++; } return b; }
+        function fillBoard(b) { const fi = findEmpty(b); if (fi === null) return true; const [r, c] = fi; const nums = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]); for (let i = 0; i < nums.length; i++) { if (isValid(b, nums[i], [r, c])) { b[r][c] = nums[i]; if (fillBoard(b)) return true; b[r][c] = 0; } } return false; }
+        
+        // --- Alur Game ---
+        async function loadNewPuzzle(difficulty) {
+            setButtonsDisabled(true);
+            const livesMap = { 'anak-sd': 5, 'bocah-gede': 3 };
+            lives = livesMap[difficulty];
+            updateLivesDisplay();
+            const difficultyMap = { 'anak-sd': 38, 'bocah-gede': 52 };
+            setTimeout(() => {
+                const puzzle = generatePuzzle(difficultyMap[difficulty]);
+                const solution = JSON.parse(JSON.stringify(puzzle));
+                solve(solution);
+                currentSolutionBoard = solution;
+                setBoard(puzzle, puzzle);
+                updatePalette();
+                setButtonsDisabled(false);
             }, 50);
         }
+        function setButtonsDisabled(d) { Object.values(difficultyButtons).forEach(b => b.disabled = d); }
 
-        exampleBtn.addEventListener('click', loadNewPuzzle);
-
-        solveBtn.addEventListener('click', () => {
-            const board = getBoard();
-            const initialBoard = JSON.parse(JSON.stringify(board));
-            messageBox.textContent = '';
-
-            // Validate initial board
-            for(let r=0; r<9; r++){
-                for(let c=0; c<9; c++){
-                    if(initialBoard[r][c] !== 0){
-                        const num = initialBoard[r][c];
-                        let boardCopy = JSON.parse(JSON.stringify(initialBoard));
-                        boardCopy[r][c] = 0;
-                        if(!isValid(boardCopy, num, [r,c])){
-                             messageBox.textContent = 'Teka-teki awal tidak valid.';
-                             return;
-                        }
-                    }
-                }
-            }
-
-            if (solve(board)) {
-                setBoard(board, initialBoard);
-            } else {
-                messageBox.textContent = 'Teka-teki ini tidak memiliki solusi.';
-            }
+        Object.entries(difficultyButtons).forEach(([level, button]) => {
+            button.addEventListener('click', () => {
+                startAudio();
+                currentDifficulty = level;
+                Object.values(difficultyButtons).forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                loadNewPuzzle(currentDifficulty);
+            });
         });
         
-        // Muat teka-teki acak saat pertama kali dibuka
-        loadNewPuzzle();
-
-        // --- REGISTRASI SERVICE WORKER UNTUK PWA ---
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').then(registration => {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                }, err => {
-                    console.log('ServiceWorker registration failed: ', err);
-                });
-            });
+        nextLevelBtn.addEventListener('click', () => {
+            const content = resultModal.querySelector('div');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                resultModal.classList.add('hidden');
+                loadNewPuzzle(currentDifficulty);
+            }, 200);
+        });
+        
+        // --- Logika Selamat Datang ---
+        function initializeUser() {
+            const savedUser = localStorage.getItem('sudokuUsername');
+            if (savedUser) {
+                usernameDisplay.textContent = savedUser;
+                welcomeModal.classList.add('hidden');
+                loadPoints();
+                loadNewPuzzle(currentDifficulty);
+            } else {
+                const modalContent = welcomeModal.querySelector('div');
+                welcomeModal.classList.remove('hidden');
+                setTimeout(() => {
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            }
         }
+
+        usernameInput.addEventListener('input', () => {
+            startGameBtn.disabled = usernameInput.value.trim() === '';
+        });
+
+        startGameBtn.addEventListener('click', () => {
+            const username = usernameInput.value.trim();
+            localStorage.setItem('sudokuUsername', username);
+            usernameDisplay.textContent = username;
+            const modalContent = welcomeModal.querySelector('div');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                welcomeModal.classList.add('hidden');
+                loadPoints();
+                loadNewPuzzle(currentDifficulty);
+            }, 300);
+        });
+
+        initializeUser();
+
     </script>
 </body>
 </html>
